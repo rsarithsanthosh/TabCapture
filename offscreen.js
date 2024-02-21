@@ -1,5 +1,3 @@
-
-
 chrome.runtime.onMessage.addListener(async (message) => {
   if (message.target === "offscreen") {
     switch (message.type) {
@@ -19,6 +17,7 @@ let recorder;
 let data = [];
 
 async function startRecording(streamId) {
+  var startTime;
   if (recorder?.state === "recording") {
     throw new Error("Called startRecording while recording is in progress.");
   }
@@ -47,22 +46,33 @@ async function startRecording(streamId) {
   recorder = new MediaRecorder(media, { mimeType: "video/webm" });
   recorder.ondataavailable = (event) => data.push(event.data);
   recorder.onstop = () => {
-    const blob = new Blob(data, { type: "video/webm" });
+    var duration = Date.now() - startTime;
 
-    // window.open(URL.createObjectURL(blob), '_blank');
+    const buggyBlob = new Blob(data, { type: "video/webm" });
+    // v1: callback-style
+    ysFixWebmDuration(buggyBlob, duration, function (fixedBlob) {
+      window.open(URL.createObjectURL(fixedBlob), "_blank");
+      // var url = URL.createObjectURL(fixedBlob);
 
-    var url = URL.createObjectURL(blob);
-    const downloadLink = document.createElement("a");
-    downloadLink.href = url;
-    downloadLink.download = "demo.mp4";
-    downloadLink.click();
+      // const downloadLink = document.createElement("a");
+      // downloadLink.href = url;
+      // downloadLink.download = "demo.mp4";
+      // downloadLink.click();
+      // Clear state ready for next recording
+    });
+
+    // var url = URL.createObjectURL(blob);
+
+    // const downloadLink = document.createElement("a");
+    // downloadLink.href = url;
+    // downloadLink.download = "demo.mp4";
+    // downloadLink.click();
     // Clear state ready for next recording
     recorder = undefined;
     data = [];
   };
   recorder.start();
-
-
+  startTime = Date.now();
   window.location.hash = "recording";
 }
 
@@ -74,6 +84,4 @@ async function stopRecording() {
 
   // Update current state in URL
   window.location.hash = "";
-
-
 }
