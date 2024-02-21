@@ -43,7 +43,7 @@ async function startRecording(streamId) {
   source.connect(output.destination);
 
   // Start recording.
-  recorder = new MediaRecorder(media, { mimeType: "video/webm" });
+  recorder = new MediaRecorder(media, { mimeType: "video/webm" ,codec:"H.264"});
   recorder.ondataavailable = (event) => data.push(event.data);
   recorder.onstop = () => {
     var duration = Date.now() - startTime;
@@ -51,13 +51,13 @@ async function startRecording(streamId) {
     const buggyBlob = new Blob(data, { type: "video/webm" });
     // v1: callback-style
     ysFixWebmDuration(buggyBlob, duration, function (fixedBlob) {
-      window.open(URL.createObjectURL(fixedBlob), "_blank");
-      // var url = URL.createObjectURL(fixedBlob);
+      // window.open(URL.createObjectURL(fixedBlob), "_blank");
+      var url = URL.createObjectURL(fixedBlob);
 
-      // const downloadLink = document.createElement("a");
-      // downloadLink.href = url;
-      // downloadLink.download = "demo.mp4";
-      // downloadLink.click();
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      downloadLink.download = "demo.webm";
+      downloadLink.click();
       // Clear state ready for next recording
     });
 
